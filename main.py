@@ -1,14 +1,18 @@
 from models import Base, Posts, Comments, Tags
-from sqlalchemy import create_engine, Session
-from parser import Parser
+from sqlalchemy import create_engine, insert
+from sqlalchemy.orm import Session
+from extract import Extractor
 
-engine = create_engine("sqlite+pysqlite:///:memory:", echo=False)
+engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
 
 Base.metadata.create_all(engine)
 
-parser = Parser()
-comments = parser.get_comments()
-comment_data = parser.get_comment_data(comments)
+extractor = Extractor()
+comments = extractor.get_comments()
+comment_data = extractor.get_comment_data(comments)
 
 with Session(engine) as session:
-    for 
+    data = comment_data[0]
+    comment = Comments(body = data["body"])
+    session.add_all([comment])
+    session.commit()

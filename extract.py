@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from pprint import pprint
+from typing import List
 
 # If comments < 1, skip
 # If comments == number of comments in database, skip
@@ -10,18 +11,20 @@ from pprint import pprint
 # If there are posts with up_to_date = False,
 # run the scraper on them to fetch comments
 
-class Parser:
+class Extractor:
     def __init__(self):
         pass
 
     def get_comments(self) -> list:
-        with open("./tests/guardian_comments.json") as file:
+        """Return a list of just the comments from the original json object"""
+        with open("./tests/raw/guardian_comments.json") as file:
             data = json.load(file)
             
             comments: list = data["discussion"]["comments"]
             return comments
         
     def filter(self, raw: list):
+        """Return a subset of comment data"""
         return {
             "body": raw["body"],
             "date": raw["isoDateTime"],
@@ -31,7 +34,7 @@ class Parser:
         }
             
 
-    def get_comment_data(self, comments: list) -> list[dict]:
+    def get_comment_data(self, comments: list) -> List[dict]:
         data = []
         for x, comment in enumerate(comments):
             data.append(self.filter(comment))
@@ -54,7 +57,7 @@ class Parser:
         return data
     
 
-parser = Parser()
+parser = Extractor()
 comments = parser.get_comments()
 data = parser.get_comment_data(comments)
 pprint(data[2])
