@@ -27,14 +27,19 @@ class Extractor:
         """Return a subset of comment data"""
         return {
             "body": raw["body"],
-            "date": raw["isoDateTime"],
+            # Needs more recent Python, 3.8 not supported
+            #"date": datetime.fromisoformat(raw["isoDateTime"]),
             "guardian_id": raw["id"],
             "permalink": raw["webUrl"],
+            "author_name": raw["userProfile"]["displayName"],
             "responses": []
         }
             
 
     def get_comment_data(self, comments: list) -> List[dict]:
+        """Apply the filter function to each comment and add list of responses if they exist.
+        Apply the filter function to any comments that are responses.
+        """
         data = []
         for x, comment in enumerate(comments):
             data.append(self.filter(comment))
@@ -60,6 +65,5 @@ class Extractor:
 parser = Extractor()
 comments = parser.get_comments()
 data = parser.get_comment_data(comments)
-pprint(data[2])
 
 

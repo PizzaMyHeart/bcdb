@@ -60,11 +60,15 @@ class Comments(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     body: Mapped[str] = mapped_column(String)
+    # See filter function in extract.py - needs updated Python version
+    #date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    author_name: Mapped[str] = mapped_column(String)
+    
     
 
-engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
+#engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
 
-Base.metadata.create_all(engine)
+#Base.metadata.create_all(engine)
 
 
 
