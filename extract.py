@@ -28,7 +28,7 @@ class Extractor:
         return {
             "body": raw["body"],
             # Needs more recent Python, 3.8 not supported
-            #"date": datetime.fromisoformat(raw["isoDateTime"]),
+            "date": datetime.fromisoformat(raw["isoDateTime"]),
             "guardian_id": raw["id"],
             "permalink": raw["webUrl"],
             "author_name": raw["userProfile"]["displayName"],

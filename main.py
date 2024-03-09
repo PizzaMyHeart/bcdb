@@ -15,14 +15,13 @@ def insert_comment_data(comment_data):
     to_insert = []
     with Session(engine) as session:
         for item in comment_data:
-            to_insert.append(Comments(body = item["body"], author_name = item["author_name"]))
+            to_insert.append(Comments(body = item["body"], date = item["date"], author_name = item["author_name"]))
         session.add_all(to_insert)
         session.commit()
 
 def get_comment_data():
     comments_all = session.scalars(select(Comments))
-    for row in comments_all:
-        print(row.author_name)
+    print(comments_all.first().author_name)
     return comments_all
 
 with Session(engine) as session:

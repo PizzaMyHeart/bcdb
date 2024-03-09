@@ -61,7 +61,7 @@ class Comments(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     body: Mapped[str] = mapped_column(String)
     # See filter function in extract.py - needs updated Python version
-    #date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     author_name: Mapped[str] = mapped_column(String)
     
     
