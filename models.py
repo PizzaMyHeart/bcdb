@@ -21,7 +21,7 @@ class TagType(enum.Enum):
 class Posts(Base):
     __tablename__ = "posts"
 
-    post_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(String)
     published_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     crawled_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
@@ -46,7 +46,7 @@ class PostsTags(Base):
     __tablename__ = "posts_tags"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("posts.post_id"))
+    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("posts.id"))
     tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("tags.tag_id"))
 
 class Users(Base):
