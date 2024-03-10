@@ -18,7 +18,7 @@ class TagType(enum.Enum):
     SERIES = enum.auto()
     
 
-class Posts(Base):
+class Articles(Base):
     __tablename__ = "posts"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -31,15 +31,13 @@ class Posts(Base):
     permalink: Mapped[str] = mapped_column(String)
     guardian_short_url: Mapped[str] = mapped_column(String, nullable=True)
 
-    def __repr__(self) -> str:
-        return f"Post(id={self.id}, title={self.title})"
-
 class Tags(Base):
     __tablename__ = "tags"
 
     tag_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String)
     type: Mapped[TagType]
+    permalink: Mapped[str] = mapped_column(String)
     post_id: Mapped[int] = mapped_column()
 
 class PostsTags(Base):
@@ -60,30 +58,11 @@ class Comments(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     body: Mapped[str] = mapped_column(String)
+    permalink: Mapped[str] = mapped_column(String)
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     author_name: Mapped[str] = mapped_column(String)
     source_id: Mapped[str] = mapped_column(String)
+    parent_guardian_id: Mapped[int] = mapped_column(Integer, nullable=True)
     parent_id: Mapped[int] = mapped_column(Integer, ForeignKey("comments.id"), nullable=True)
 
-class CommentsHierarchy(Base):
-    __tablename__ = "comments_hierarchy"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    parent_id: Mapped[int] = mapped_column(Integer, ForeignKey("comments.id"))
-    child_id: Mapped[int] = mapped_column(Integer, ForeignKey("comments.id"))
-    depth: Mapped[int] = mapped_column(Integer)
-    
-    
-
-#engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
-
-#Base.metadata.create_all(engine)
-
-
-
-"""
-with Session(engine) as session:
-    result = session.execute(text("CREATE TABLE post (post_id int, title str)"))
-    print(result)
-
-"""

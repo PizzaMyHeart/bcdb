@@ -1,18 +1,38 @@
-from models import Base, Posts, Comments, Tags, CommentsHierarchy
+from models import Base, Articles, Comments, Tags
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
-from extract import Extractor
-from pprint import pprint
+from extract import Extractor, RawDataType
 
 engine = create_engine("sqlite+pysqlite:///:memory:", echo=False)
 
 Base.metadata.create_all(engine)
 
+#url_comments = "https://discussion.theguardian.com/discussion-api/discussion//p/q3x8f?orderBy=oldest&pageSize=100"
+url_comments = "./tests/raw/guardian_comments_grief.json"
+url_articles = "./tests/raw/guardian_articles.json"
+
 extractor = Extractor()
-comments = extractor.get_comments()
-comment_data = extractor.get_comment_data(comments)
+comments = extractor.get_comments(url_comments)
+articles = extractor.get_articles(url_articles)
+
+def make_article_row(articles):
+    #print(Articles(**articles))
+    return Articles(**articles)
+
+def insert_article_data(article_data):
+    with Session(engine) as session:
+        for item in article_data:
+            print(item)
+            article_row = make_article_row(item)
+            session.add(article_row)
+        session.commit()
 
 def make_comment_row(comment: dict, parent_id = None):
+    # Use a subset of the dict without the responses list
+    # but keep the list in the original dict to build adjacency list.
+    comment = {k: v for k, v in comment.items() if k not in ("responses",)}
+    return Comments(**comment, parent_id = parent_id)
+    """
     return Comments(
         body = comment["body"], 
         date = comment["date"], 
@@ -20,9 +40,7 @@ def make_comment_row(comment: dict, parent_id = None):
         source_id = comment["source_id"],
         parent_id = parent_id
         )
-
-def make_comment_closure_row(parent_id, child_id, depth):
-    return CommentsHierarchy(parent_id = parent_id, child_id = child_id, depth = depth)
+        """
 
 def insert_comment_data(comment_data):
     with Session(engine) as session:
@@ -35,22 +53,31 @@ def insert_comment_data(comment_data):
                     session.add(make_comment_row(response, parent_id=comment_row.id))
         session.commit()
 
-def get_comment_data():
-    comments = session.scalars(select(Comments)).all()
-    return comments
+def select_all(table):
+    rows = session.query(table).all()
+    return rows
 
 def get_comment_thread(comment_id):
+    """Recursive CTE query to get a comment and its descendants.
+    Returns rows from the comments table and the number of replies."""
     subquery_one = select(Comments).where(Comments.id == comment_id).cte(recursive=True)
     subquery_two = select(Comments).join(subquery_one, Comments.parent_id == subquery_one.c.id)
     num_replies = session.query(subquery_two.subquery()).count()
     recursive_query = subquery_one.union(subquery_two)
     thread = session.query(recursive_query).all()
     return {"thread": thread, "num_replies": num_replies}
+    
 
 with Session(engine) as session:
-    insert_comment_data(comment_data[:5])
-    
+    insert_article_data(articles)
+    insert_comment_data(comments)
+
+    for row in select_all(Articles):
+        #print(vars(row))
+        pass
+    """
     thread = get_comment_thread(5)
-    pprint(thread["thread"])
+    print(thread["thread"])
     print(f"{thread['num_replies']} replies")
+    """
     

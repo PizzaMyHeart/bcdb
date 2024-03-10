@@ -32,7 +32,7 @@ class ArticleURLFetcher:
         #r = requests.get(url)
         pass
 
-from models import Base, Posts, Comments, Tags, Users, PostSource
+from models import Base, Articles, Comments, Tags, Users, PostSource
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
@@ -43,7 +43,7 @@ Base.metadata.create_all(engine)
 
 with Session(engine) as session:
     for result in get_urls():
-        session.add(Posts(
+        session.add(Articles(
             title=result["title"],
             published_date=result["published_date"],
             crawled_date=datetime.utcnow(),
@@ -53,5 +53,5 @@ with Session(engine) as session:
             source=PostSource.GUARDIAN
         ))
     session.commit()
-    result = session.execute(select(Posts).where(Posts.title == "Five of the best recent books from Ukraine"))
+    result = session.execute(select(Articles).where(Articles.title == "Five of the best recent books from Ukraine"))
     print(result.all())
