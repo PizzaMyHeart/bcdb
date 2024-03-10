@@ -3,7 +3,7 @@ from datetime import datetime
 import enum
 #from enum import Enum, auto
 from sqlalchemy import Integer, String, Enum, DateTime, ForeignKey
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, relationship
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 class Base(DeclarativeBase):
@@ -60,9 +60,18 @@ class Comments(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     body: Mapped[str] = mapped_column(String)
-    # See filter function in extract.py - needs updated Python version
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     author_name: Mapped[str] = mapped_column(String)
+    source_id: Mapped[str] = mapped_column(String)
+    parent_id: Mapped[int] = mapped_column(Integer, ForeignKey("comments.id"), nullable=True)
+
+class CommentsHierarchy(Base):
+    __tablename__ = "comments_hierarchy"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    parent_id: Mapped[int] = mapped_column(Integer, ForeignKey("comments.id"))
+    child_id: Mapped[int] = mapped_column(Integer, ForeignKey("comments.id"))
+    depth: Mapped[int] = mapped_column(Integer)
     
     
 

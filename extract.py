@@ -27,9 +27,8 @@ class Extractor:
         """Return a subset of comment data"""
         return {
             "body": raw["body"],
-            # Needs more recent Python, 3.8 not supported
             "date": datetime.fromisoformat(raw["isoDateTime"]),
-            "guardian_id": raw["id"],
+            "source_id": raw["id"], #guardian ID
             "permalink": raw["webUrl"],
             "author_name": raw["userProfile"]["displayName"],
             "responses": []
