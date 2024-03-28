@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from typing import List
 from enum import Enum, auto
-from models import PostSource
+from models import ArticleSource
 
 # If comments < 1, skip
 # If comments == number of comments in database, skip
@@ -35,7 +35,7 @@ class Extractor:
             "updated_date": datetime.utcnow(),
             "permalink": raw["webUrl"],
             "guardian_short_url": raw["fields"]["shortUrl"],
-            "source": PostSource.GUARDIAN
+            "source": ArticleSource.GUARDIAN
         }
     
     def tags_filter(self, raw: list):

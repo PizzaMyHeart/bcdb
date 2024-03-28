@@ -11,38 +11,33 @@ def make_article_row(articles):
     return Articles(**articles)
 
 def insert_article_data(article_data):
+    """Returns the row id (used as foreign key for comments)."""
     with Session(engine) as session:
         for item in article_data:
             article_row = make_article_row(item)
             session.add(article_row)
         session.commit()
+        return article_row.id
 
-def make_comment_row(comment: dict, parent_id = None):
+def make_comment_row(comment: dict, article_id: int, parent_id = None):
     # Use a subset of the dict without the responses list
     # but keep the list in the original dict to build adjacency list.
     #comment = {k: v for k, v in comment.items() if k not in ("responses",)}
     comment_table_columns = ("body, date, source, permalink, source_id, author_name")
     comment = {k:v for k, v in comment.items() if k in comment_table_columns}
+    # Use article id as foreign key
+    comment["article_id"] = article_id
     return Comments(**comment, parent_id = parent_id)
-    """
-    return Comments(
-        body = comment["body"], 
-        date = comment["date"], 
-        author_name = comment["author_name"], 
-        source_id = comment["source_id"],
-        parent_id = parent_id
-        )
-        """
 
-def insert_comment_data(comment_data):
+def insert_comment_data(comment_data, article_id):
     with Session(engine) as session:
         for item in comment_data:
-            comment_row = make_comment_row(item)
+            comment_row = make_comment_row(item, article_id)
             session.add(comment_row)
             session.flush()
             if len(item["responses"]) > 0:
                 for response in item["responses"]:
-                    session.add(make_comment_row(response, parent_id=comment_row.id))
+                    session.add(make_comment_row(response, article_id, parent_id=comment_row.id))
         session.commit()
 
 def select_all(table):
@@ -60,3 +55,12 @@ def get_comment_thread(comment_id):
         recursive_query = subquery_one.union(subquery_two)
         thread = session.query(recursive_query).all()
         return {"thread": thread, "num_replies": num_replies}
+    
+def print_table(table):
+    """Utility function to print all rows of a table."""
+    for row in select_all(table):
+        print(vars(row))
+   
+def build_db(articles, comments):
+    article_id = insert_article_data(articles)
+    insert_comment_data(comments, article_id)

@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 import os
 import json
 from datetime import datetime
-from models import Base, Articles, PostSource
+from models import Base, Articles, ArticleSource
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
@@ -51,7 +51,7 @@ with Session(engine) as session:
             updated_date=datetime.utcnow(),
             permalink=result["post_permalink"],
             guardian_short_url=result["guardian_short_url"],
-            source=PostSource.GUARDIAN
+            source=ArticleSource.GUARDIAN
         ))
     session.commit()
     result = session.execute(select(Articles).where(Articles.title == "Five of the best recent books from Ukraine"))

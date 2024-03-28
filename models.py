@@ -7,7 +7,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 class Base(DeclarativeBase):
     pass
 
-class PostSource(enum.Enum):
+class ArticleSource(enum.Enum):
     GUARDIAN = enum.auto()
     TORDOTCOM = enum.auto()
 
@@ -17,14 +17,14 @@ class TagType(enum.Enum):
     
 
 class Articles(Base):
-    __tablename__ = "posts"
+    __tablename__ = "articles"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(String)
     published_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     crawled_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    source: Mapped[PostSource]
+    source: Mapped[ArticleSource]
     num_comments: Mapped[int] = mapped_column(Integer, nullable=True)
     permalink: Mapped[str] = mapped_column(String)
     guardian_short_url: Mapped[str] = mapped_column(String, nullable=True)
@@ -38,11 +38,11 @@ class Tags(Base):
     permalink: Mapped[str] = mapped_column(String)
     post_id: Mapped[int] = mapped_column()
 
-class PostsTags(Base):
+class ArticlesTags(Base):
     __tablename__ = "posts_tags"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("posts.id"))
+    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("articles.id"))
     tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("tags.tag_id"))
 
 class Users(Base):
@@ -62,5 +62,6 @@ class Comments(Base):
     source_id: Mapped[str] = mapped_column(String)
     parent_guardian_id: Mapped[int] = mapped_column(Integer, nullable=True)
     parent_id: Mapped[int] = mapped_column(Integer, ForeignKey("comments.id"), nullable=True)
+    article_id: Mapped[int] = mapped_column(Integer, ForeignKey("articles.id"))
 
 
