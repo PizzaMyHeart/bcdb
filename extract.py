@@ -1,6 +1,5 @@
 import json
 from datetime import datetime
-from pprint import pprint
 from typing import List
 from enum import Enum, auto
 from models import PostSource

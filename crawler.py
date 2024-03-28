@@ -2,6 +2,9 @@ from dotenv import load_dotenv
 import os
 import json
 from datetime import datetime
+from models import Base, Articles, PostSource
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import Session
 
 load_dotenv()
 
@@ -32,9 +35,7 @@ class ArticleURLFetcher:
         #r = requests.get(url)
         pass
 
-from models import Base, Articles, Comments, Tags, Users, PostSource
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import Session
+
 
 engine = create_engine("sqlite+pysqlite:///:memory:", echo=False)
 
