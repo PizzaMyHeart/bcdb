@@ -1,7 +1,7 @@
-from models import Base, Articles, Comments, Tags
+from models import Base, Articles, Comments
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
-from extract import Extractor, RawDataType
+from extract import Extractor
 
 engine = create_engine("sqlite+pysqlite:///:memory:", echo=False)
 
@@ -22,7 +22,6 @@ def make_article_row(articles):
 def insert_article_data(article_data):
     with Session(engine) as session:
         for item in article_data:
-            print(item)
             article_row = make_article_row(item)
             session.add(article_row)
         session.commit()
@@ -30,7 +29,9 @@ def insert_article_data(article_data):
 def make_comment_row(comment: dict, parent_id = None):
     # Use a subset of the dict without the responses list
     # but keep the list in the original dict to build adjacency list.
-    comment = {k: v for k, v in comment.items() if k not in ("responses",)}
+    #comment = {k: v for k, v in comment.items() if k not in ("responses",)}
+    comment_table_columns = ("body, date, source, permalink, source_id, author_name")
+    comment = {k:v for k, v in comment.items() if k in comment_table_columns}
     return Comments(**comment, parent_id = parent_id)
     """
     return Comments(

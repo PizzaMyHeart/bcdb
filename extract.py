@@ -26,10 +26,7 @@ class Extractor:
     def load_data(self, url, type: RawDataType) -> list:
         with open(url) as file:
             data = json.load(file)
-        if type == RawDataType.ARTICLE:
-            return data["response"]["results"]
-        elif type == RawDataType.COMMENT:
-            return data["discussion"]["comments"]
+        return data
         
     def articles_filter(self, raw: list):
         return {
@@ -48,16 +45,17 @@ class Extractor:
             "permalink": raw["webUrl"]
         }
     
-    def json_filter(self, items: list, func: callable) -> list:
+    def filter_func(self, items: list, func: callable) -> list:
         data = []
         for item in items:
             data.append(func(item))
         return data
     
     def get_articles(self, url):
-        articles = self.load_data(url, RawDataType.ARTICLE)
+        data = self.load_data(url, RawDataType.ARTICLE)
+        articles = data["response"]["results"]
         #print(articles)
-        return self.json_filter(articles, self.articles_filter)
+        return self.filter_func(articles, self.articles_filter)
 
     """
     def get_articles(self, url):
@@ -88,27 +86,19 @@ class Extractor:
         """Apply the filter function to each comment and add list of responses if they exist.
         Apply the filter function to any comments that are responses.
         """
-        data = []
-        comments = self.load_data(url, RawDataType.COMMENT)
+        processed = []
+        data = self.load_data(url, RawDataType.COMMENT)
+        num_comments = data["discussion"]["commentCount"]
+        print(num_comments)
+        comments = data["discussion"]["comments"]
         for x, comment in enumerate(comments):
-            data.append(self.comments_filter(comment))
+            processed.append(self.comments_filter(comment))
             if "responses" in comment.keys():
                 for y, response in enumerate(comment["responses"]):
-                    data[x]["responses"].append(self.comments_filter(response))
-                    data[x]["responses"][y].update({"parent_guardian_id": response["responseTo"]["commentId"]})
-            """
-        for comment in comments:
-            body: str = comment["body"]
-            date: datetime = comment["isoDateTime"]
-            guardian_id: int = comment["id"]
-            permalink: str = comment["webUrl"]
-            if "responses" in comment.keys():
-                responses: list = comment["responses"]
-            else:
-                responses: list = []
-            data.append({"body": body, "date": date, "responses": responses})
-            """
-        return data
+                    processed[x]["responses"].append(self.comments_filter(response))
+                    processed[x]["responses"][y].update({"parent_guardian_id": response["responseTo"]["commentId"]})
+ 
+        return processed
     
 
 
