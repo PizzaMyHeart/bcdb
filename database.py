@@ -56,6 +56,12 @@ def get_comment_thread(comment_id):
         thread = session.query(recursive_query).all()
         return {"thread": thread, "num_replies": num_replies}
     
+def get_all_comments(article_id):
+    with Session(engine) as session:
+        stmt = select(Comments).where(Comments.article_id == article_id)
+        rows = session.execute(stmt)
+        return rows.scalars().all()
+    
 def print_table(table):
     """Utility function to print all rows of a table."""
     for row in select_all(table):
