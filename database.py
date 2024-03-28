@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, update
 from sqlalchemy.orm import Session
 from models import Base, Articles, Comments
 
@@ -61,7 +61,21 @@ def get_all_comments(article_id):
         stmt = select(Comments).where(Comments.article_id == article_id)
         rows = session.execute(stmt)
         return rows.scalars().all()
+
+def update_num_comments():
+    with Session(engine) as session:
+        rows = session.execute(select(Articles.id))
+        article_ids = [row[0] for row in rows]
+        for article_id in article_ids:
+            num_comments = len(get_all_comments(article_id))
+            session.execute(update(Articles).where(Articles.id == 1).values(num_comments=num_comments))
+            session.commit()
     
+def print_one_article(article_id):
+    with Session(engine) as session:
+        rows = session.execute(select(Articles).where(Articles.id == article_id)).all()
+        print(vars(rows[0][0]))
+
 def print_table(table):
     """Utility function to print all rows of a table."""
     for row in select_all(table):
