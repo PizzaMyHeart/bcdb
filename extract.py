@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import List
 from enum import Enum, auto
 from models import ArticleSource
@@ -31,8 +31,8 @@ class Extractor:
         return {
             "title": raw["webTitle"],
             "published_date": datetime.fromisoformat(raw["webPublicationDate"]),
-            "crawled_date": datetime.utcnow(),
-            "updated_date": datetime.utcnow(),
+            "crawled_date": datetime.now(UTC),
+            "updated_date": datetime.now(UTC),
             "permalink": raw["webUrl"],
             "guardian_short_url": raw["fields"]["shortUrl"],
             "source": ArticleSource.GUARDIAN
