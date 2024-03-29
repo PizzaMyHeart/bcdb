@@ -10,10 +10,19 @@ def make_article_row(articles):
     #print(Articles(**articles))
     return Articles(**articles)
 
+def get_article_permalinks() -> list:
+    """Returns all permalinks in the articles table."""
+    with Session(engine) as session:
+        rows = session.execute(select(Articles.permalink))
+        return [row[0] for row in rows]
+
 def insert_article_data(article_data):
     """Returns the row id (used as foreign key for comments)."""
     with Session(engine) as session:
+        existing_articles = get_article_permalinks()
         for item in article_data:
+            if item["permalink"] in existing_articles:
+                continue
             article_row = make_article_row(item)
             session.add(article_row)
         session.commit()
