@@ -57,6 +57,7 @@ class Extractor:
             "published_date": datetime.fromisoformat(raw["webPublicationDate"]),
             "crawled_date": datetime.now(UTC),
             "updated_date": datetime.now(UTC),
+            "comment_close_date": datetime.fromisoformat(raw["fields"]["commentCloseDate"]),
             "permalink": raw["webUrl"],
             "guardian_short_url": raw["fields"]["shortUrl"],
             "source": ArticleSource.GUARDIAN

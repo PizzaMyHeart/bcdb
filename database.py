@@ -33,7 +33,7 @@ def get_tags():
 
 
 def make_article_row(article):
-    article_table_columns = ("title", "published_date", "crawled_date", "source", "is_closed_for_comments", "num_comments", "permalink", "guardian_short_url")
+    article_table_columns = ("title", "published_date", "crawled_date", "comment_close_date", "source", "is_closed_for_comments", "num_comments", "permalink", "guardian_short_url")
     article = truncate_keys(article, article_table_columns)
     return Articles(**article)
 
@@ -55,7 +55,6 @@ def insert_article_data(article_data):
             session.commit() # Commit to get row id
             tag_rows = item["tags"]
             for item in tag_rows:
-                print(item)
                 tag_row = make_tags_row(item)
                 session.add(tag_row)
                 session.commit() # Commit to get row id
