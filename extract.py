@@ -3,6 +3,12 @@ from datetime import datetime, UTC
 from typing import List
 from enum import Enum, auto
 from models import ArticleSource
+import requests
+import os
+from dotenv import load_dotenv
+
+
+
 
 # If comments < 1, skip
 # If comments == number of comments in database, skip
@@ -20,9 +26,13 @@ class RawDataType(Enum):
 
 class Extractor:
     def __init__(self, test=False):
+        load_dotenv()
+
+        self.GUARDIAN_API_KEY = os.environ.get("GUARDIAN_API_KEY")
         self.articles = []
         self.comments = []
         self.test = test
+        self.api_url_guardian_articles = f"https://content.guardianapis.com/search?section=books&page-size=50&commentable=true&show-fields=shortUrl,commentable&show-tags=series,keyword&api-key={self.GUARDIAN_API_KEY}"
 
     def load_data(self, url, type: RawDataType) -> list:
         if self.test:
@@ -32,6 +42,12 @@ class Extractor:
         else:
             pass
         
+    def get_articles(self, url):
+        data = self.load_data(url, RawDataType.ARTICLE)
+        articles = data["response"]["results"]
+        self.articles = self.filter_func(articles, self.articles_filter)
+        return self.filter_func(articles, self.articles_filter)
+    
     def articles_filter(self, raw: list):
         return {
             "title": raw["webTitle"],
@@ -55,12 +71,6 @@ class Extractor:
             data.append(func(item))
         return data
     
-    def get_articles(self, url):
-        data = self.load_data(url, RawDataType.ARTICLE)
-        articles = data["response"]["results"]
-        #print(articles)
-        self.articles = self.filter_func(articles, self.articles_filter)
-        return self.filter_func(articles, self.articles_filter)
 
     def comments_filter(self, raw: list):
         """Return a subset of comment data"""

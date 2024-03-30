@@ -1,11 +1,29 @@
-from sqlalchemy import create_engine, select, update
+from sqlalchemy import create_engine, select, update, URL
 from sqlalchemy.orm import Session
 from models import Base, Articles, Comments
 import re
+import os
+from dotenv import load_dotenv
 
-engine = create_engine("sqlite+pysqlite:///:memory:", echo=False)
+def specify_engine(type="test"):
+    if type == "test":
+        engine = create_engine("sqlite+pysqlite:///:memory:", echo=False)
+    elif type == "postgres":
+        load_dotenv()
+        POSTGRES_USER = os.environ.get("POSTGRES_USER")
+        POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+        postgres_url = URL.create(
+            "postgresql+psycopg2",
+            username=POSTGRES_USER,
+            password=POSTGRES_PASSWORD,
+            host="localhost",
+            database="bcdb"
+        )
+        engine = create_engine(postgres_url, echo=False)
+    Base.metadata.create_all(engine)
+    return engine
 
-Base.metadata.create_all(engine)
+engine = specify_engine(type="postgres")
 
 def make_article_row(articles):
     #print(Articles(**articles))

@@ -16,7 +16,7 @@ update_num_comments()
 short_urls = select_column(Articles, "guardian_short_url")
 guardian_article_keys = [get_guardian_article_key(item) for item in short_urls]
 print(guardian_article_keys)
-#print_table(Articles)
+print_table(Articles)
 #print_table(Comments)
 
 
