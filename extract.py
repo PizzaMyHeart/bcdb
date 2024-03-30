@@ -19,13 +19,18 @@ class RawDataType(Enum):
     COMMENT = auto()
 
 class Extractor:
-    def __init__(self):
-        pass
+    def __init__(self, test=False):
+        self.articles = []
+        self.comments = []
+        self.test = test
 
     def load_data(self, url, type: RawDataType) -> list:
-        with open(url) as file:
-            data = json.load(file)
-        return data
+        if self.test:
+            with open(url) as file:
+                data = json.load(file)
+            return data
+        else:
+            pass
         
     def articles_filter(self, raw: list):
         return {
@@ -54,20 +59,8 @@ class Extractor:
         data = self.load_data(url, RawDataType.ARTICLE)
         articles = data["response"]["results"]
         #print(articles)
+        self.articles = self.filter_func(articles, self.articles_filter)
         return self.filter_func(articles, self.articles_filter)
-
-    """
-    def get_articles(self, url):
-        article_data = []
-        tag_data = []
-        articles = self.load_data(url, RawDataType.ARTICLE)
-        for article in articles:
-            article_data.append(self.articles_filter(article))
-            for tag in article["tags"]:
-                tag_data.append(self.tags_filter(tag))
-
-        return article_data, tag_data
-    """
 
     def comments_filter(self, raw: list):
         """Return a subset of comment data"""
@@ -87,16 +80,20 @@ class Extractor:
         """
         processed = []
         data = self.load_data(url, RawDataType.COMMENT)
+        is_closed_for_comments = data["discussion"]["isClosedForComments"]
         num_comments = data["discussion"]["commentCount"]
-        print(num_comments)
         comments = data["discussion"]["comments"]
         for x, comment in enumerate(comments):
-            processed.append(self.comments_filter(comment))
+            filtered = self.comments_filter(comment)
+            filtered["num_comments"] = num_comments
+            filtered["is_closed_to_comments"] = is_closed_for_comments
+            print(filtered)
+            processed.append(filtered)
             if "responses" in comment.keys():
                 for y, response in enumerate(comment["responses"]):
                     processed[x]["responses"].append(self.comments_filter(response))
                     processed[x]["responses"][y].update({"parent_guardian_id": response["responseTo"]["commentId"]})
- 
+        self.comments = processed
         return processed
     
 

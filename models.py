@@ -25,6 +25,7 @@ class Articles(Base):
     crawled_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     source: Mapped[ArticleSource]
+    closed_to_comments: Mapped[bool] = mapped_column(default=False)
     num_comments: Mapped[int] = mapped_column(Integer, nullable=True)
     permalink: Mapped[str] = mapped_column(String)
     guardian_short_url: Mapped[str] = mapped_column(String, nullable=True)

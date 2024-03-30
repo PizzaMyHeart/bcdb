@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine, select, update
 from sqlalchemy.orm import Session
 from models import Base, Articles, Comments
+import re
 
 engine = create_engine("sqlite+pysqlite:///:memory:", echo=False)
 
@@ -10,16 +11,10 @@ def make_article_row(articles):
     #print(Articles(**articles))
     return Articles(**articles)
 
-def get_article_permalinks() -> list:
-    """Returns all permalinks in the articles table."""
-    with Session(engine) as session:
-        rows = session.execute(select(Articles.permalink))
-        return [row[0] for row in rows]
-
 def insert_article_data(article_data):
     """Returns the row id (used as foreign key for comments)."""
     with Session(engine) as session:
-        existing_articles = get_article_permalinks()
+        existing_articles = select_column(Articles, "permalink")
         for item in article_data:
             if item["permalink"] in existing_articles:
                 continue
@@ -48,11 +43,20 @@ def insert_comment_data(comment_data, article_id):
                 for response in item["responses"]:
                     session.add(make_comment_row(response, article_id, parent_id=comment_row.id))
         session.commit()
+        
+def get_guardian_article_key(url):
+    pattern = r"p/.*"
+    return re.search(pattern, url).group(0)
 
 def select_all(table):
     with Session(engine) as session:
         rows = session.query(table).all()
         return rows
+    
+def select_column(table, column) -> list:
+    with Session(engine) as session:
+        rows = session.execute(select(getattr(table, column)))
+        return [row[0] for row in rows]
 
 def get_comment_thread(comment_id):
     """Recursive CTE query to get a comment and its descendants.
