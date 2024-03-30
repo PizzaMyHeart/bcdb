@@ -29,8 +29,6 @@ class Extractor:
         load_dotenv()
 
         self.GUARDIAN_API_KEY = os.environ.get("GUARDIAN_API_KEY")
-        self.articles = []
-        self.comments = []
         self.test = test
         self.api_url_guardian_articles = f"https://content.guardianapis.com/search?section=books&page-size=50&commentable=true&show-fields=shortUrl,commentable&show-tags=series,keyword&api-key={self.GUARDIAN_API_KEY}"
 
@@ -45,8 +43,12 @@ class Extractor:
     def get_articles(self, url):
         data = self.load_data(url, RawDataType.ARTICLE)
         articles = data["response"]["results"]
-        self.articles = self.filter_func(articles, self.articles_filter)
-        return self.filter_func(articles, self.articles_filter)
+        processed = self.filter_func(articles, self.articles_filter)
+        for article in articles:
+            for item in processed:
+                item["tags"] = self.filter_func(article["tags"], self.tags_filter)
+        print(processed)
+        return processed
     
     def articles_filter(self, raw: list):
         return {
@@ -97,13 +99,11 @@ class Extractor:
             filtered = self.comments_filter(comment)
             filtered["num_comments"] = num_comments
             filtered["is_closed_to_comments"] = is_closed_for_comments
-            print(filtered)
             processed.append(filtered)
             if "responses" in comment.keys():
                 for y, response in enumerate(comment["responses"]):
                     processed[x]["responses"].append(self.comments_filter(response))
                     processed[x]["responses"][y].update({"parent_guardian_id": response["responseTo"]["commentId"]})
-        self.comments = processed
         return processed
     
 

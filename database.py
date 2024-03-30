@@ -23,11 +23,13 @@ def specify_engine(type="test"):
     Base.metadata.create_all(engine)
     return engine
 
-engine = specify_engine(type="postgres")
+engine = specify_engine(type="test")
 
-def make_article_row(articles):
+def make_article_row(article):
     #print(Articles(**articles))
-    return Articles(**articles)
+    article_table_columns = ("title", "published_date", "crawled_date", "source", "is_closed_for_comments", "num_comments", "permalink", "guardian_short_url")
+    article = truncate_keys(article, article_table_columns)
+    return Articles(**article)
 
 def insert_article_data(article_data):
     """Returns the row id (used as foreign key for comments)."""
@@ -39,14 +41,19 @@ def insert_article_data(article_data):
             article_row = make_article_row(item)
             session.add(article_row)
         session.commit()
-        return article_row.id
+
+def truncate_keys(data: dict, keys: tuple) -> dict:
+    """Return a smaller dict containing a subset of keys"""
+    data = {k:v for k, v in data.items() if k in keys}
+    return data
 
 def make_comment_row(comment: dict, article_id: int, parent_id = None):
     # Use a subset of the dict without the responses list
     # but keep the list in the original dict to build adjacency list.
     #comment = {k: v for k, v in comment.items() if k not in ("responses",)}
     comment_table_columns = ("body, date, source, permalink, source_id, author_name")
-    comment = {k:v for k, v in comment.items() if k in comment_table_columns}
+    #comment = {k:v for k, v in comment.items() if k in comment_table_columns}
+    comment = truncate_keys(comment, comment_table_columns)
     # Use article id as foreign key
     comment["article_id"] = article_id
     return Comments(**comment, parent_id = parent_id)
@@ -113,5 +120,6 @@ def print_table(table):
         print(vars(row))
    
 def build_db(articles, comments):
-    article_id = insert_article_data(articles)
-    insert_comment_data(comments, article_id)
+    insert_article_data(articles)
+    #article_id = insert_article_data(articles)
+    #insert_comment_data(comments, article_id)
