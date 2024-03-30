@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, select, update, URL
 from sqlalchemy.orm import Session
-from models import Base, Articles, Comments
+from models import Base, Articles, Comments, Tags, ArticlesTags
 import re
 import os
 from dotenv import load_dotenv
@@ -23,16 +23,28 @@ def specify_engine(type="test"):
     Base.metadata.create_all(engine)
     return engine
 
-engine = specify_engine(type="test")
+engine = specify_engine(type="postgres")
+
+def get_tags():
+    tags = select_column(Tags, "name")
+    tags = set(tags)
+    print(tags)
+    return tags
+
 
 def make_article_row(article):
-    #print(Articles(**articles))
     article_table_columns = ("title", "published_date", "crawled_date", "source", "is_closed_for_comments", "num_comments", "permalink", "guardian_short_url")
     article = truncate_keys(article, article_table_columns)
     return Articles(**article)
 
+def make_tags_row(tag):
+    return Tags(**tag)
+
+def make_articlestags_row(article_id, tag_id):
+    return ArticlesTags(article_id=article_id, tag_id=tag_id)
+
 def insert_article_data(article_data):
-    """Returns the row id (used as foreign key for comments)."""
+    """Inserts rows in the Articles, Tags and ArticlesTags tables."""
     with Session(engine) as session:
         existing_articles = select_column(Articles, "permalink")
         for item in article_data:
@@ -40,6 +52,14 @@ def insert_article_data(article_data):
                 continue
             article_row = make_article_row(item)
             session.add(article_row)
+            session.commit() # Commit to get row id
+            tag_rows = item["tags"]
+            for item in tag_rows:
+                print(item)
+                tag_row = make_tags_row(item)
+                session.add(tag_row)
+                session.commit() # Commit to get row id
+                session.add(make_articlestags_row(article_row.id, tag_row.id))
         session.commit()
 
 def truncate_keys(data: dict, keys: tuple) -> dict:
@@ -52,7 +72,6 @@ def make_comment_row(comment: dict, article_id: int, parent_id = None):
     # but keep the list in the original dict to build adjacency list.
     #comment = {k: v for k, v in comment.items() if k not in ("responses",)}
     comment_table_columns = ("body, date, source, permalink, source_id, author_name")
-    #comment = {k:v for k, v in comment.items() if k in comment_table_columns}
     comment = truncate_keys(comment, comment_table_columns)
     # Use article id as foreign key
     comment["article_id"] = article_id

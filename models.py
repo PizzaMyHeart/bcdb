@@ -32,18 +32,16 @@ class Articles(Base):
 class Tags(Base):
     __tablename__ = "tags"
 
-    tag_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String)
-    type: Mapped[TagType]
     permalink: Mapped[str] = mapped_column(String)
-    post_id: Mapped[int] = mapped_column()
 
 class ArticlesTags(Base):
-    __tablename__ = "posts_tags"
+    __tablename__ = "articles_tags"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("articles.id"))
-    tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("tags.tag_id"))
+    article_id: Mapped[int] = mapped_column(Integer, ForeignKey("articles.id"))
+    tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("tags.id"))
 
 class Users(Base):
     __tablename__ = "users"

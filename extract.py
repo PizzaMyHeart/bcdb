@@ -44,10 +44,11 @@ class Extractor:
         data = self.load_data(url, RawDataType.ARTICLE)
         articles = data["response"]["results"]
         processed = self.filter_func(articles, self.articles_filter)
-        for article in articles:
-            for item in processed:
-                item["tags"] = self.filter_func(article["tags"], self.tags_filter)
-        print(processed)
+        for idx, article in enumerate(articles):
+            tags = self.filter_func(article["tags"], self.tags_filter)
+            #print(f"\n{idx}: {tags}\n")
+            processed[idx]["tags"] = tags
+            #print(processed[idx])
         return processed
     
     def articles_filter(self, raw: list):

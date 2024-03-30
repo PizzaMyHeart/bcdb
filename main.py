@@ -1,6 +1,6 @@
 from models import Articles, Comments
 from extract import Extractor
-from database import build_db, print_table, get_all_comments, update_num_comments, select_column, get_guardian_article_key, get_comment_thread
+from database import build_db, print_table, get_all_comments, get_tags, select_column, get_guardian_article_key, get_comment_thread
 
 #url_comments = "https://discussion.theguardian.com/discussion-api/discussion//p/q3x8f?orderBy=oldest&pageSize=100"
 url_comments = "./tests/raw/guardian_comments_grief.json"
@@ -15,6 +15,7 @@ build_db(articles, comments)
 #update_num_comments()
 short_urls = select_column(Articles, "guardian_short_url")
 guardian_article_keys = [get_guardian_article_key(item) for item in short_urls]
+get_tags()
 #print(guardian_article_keys)
 #print_table(Articles)
 #print_table(Comments)
