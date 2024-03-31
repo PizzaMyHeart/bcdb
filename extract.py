@@ -1,9 +1,7 @@
-import json
 from datetime import datetime, UTC
 from typing import List
 from enum import Enum, auto
 from models import ArticleSource
-import requests
 import os
 from dotenv import load_dotenv
 
@@ -18,7 +16,8 @@ from dotenv import load_dotenv
 # If there are posts with up_to_date = False,
 # run the scraper on them to fetch comments
 
-
+# select by tag
+# SELECT a.* FROM articles a JOIN articles_tags at ON a.id = at.article_id JOIN tags t ON at.tag_id = t.id WHERE t.name = 'Philosophy books';
 
 class RawDataType(Enum):
     ARTICLE = auto()
@@ -32,16 +31,9 @@ class Extractor:
         self.test = test
         self.api_url_guardian_articles = f"https://content.guardianapis.com/search?section=books&page-size=50&commentable=true&show-fields=shortUrl,commentable&show-tags=series,keyword&api-key={self.GUARDIAN_API_KEY}"
 
-    def load_data(self, url, type: RawDataType) -> list:
-        if self.test:
-            with open(url) as file:
-                data = json.load(file)
-            return data
-        else:
-            pass
         
-    def get_articles(self, url):
-        data = self.load_data(url, RawDataType.ARTICLE)
+    def get_articles(self, data):
+        #data = self.load_data(url)
         articles = data["response"]["results"]
         processed = self.filter_func(articles, self.articles_filter)
         for idx, article in enumerate(articles):

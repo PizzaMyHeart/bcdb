@@ -49,7 +49,7 @@ def insert_article_data(article_data):
         existing_articles = select_column(Articles, "permalink")
         for item in article_data:
             if item["permalink"] in existing_articles:
-                continue
+                print("Item already exists")
             article_row = make_article_row(item)
             session.add(article_row)
             session.commit() # Commit to get row id
@@ -137,7 +137,7 @@ def print_table(table):
     for row in select_all(table):
         print(vars(row))
    
-def build_db(articles, comments):
+def build_db(articles):
     insert_article_data(articles)
     #article_id = insert_article_data(articles)
     #insert_comment_data(comments, article_id)
