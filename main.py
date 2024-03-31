@@ -12,7 +12,7 @@ comments = extractor.get_comments(url_comments)
 build_db(articles)
 """
 caller = ArticleAPICaller()
-caller.paginate()
+caller.paginate_articles()
 #update_num_comments()
 #short_urls = select_column(Articles, "guardian_short_url")
 #guardian_article_keys = [get_guardian_article_key(item) for item in short_urls]

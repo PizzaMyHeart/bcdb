@@ -4,6 +4,7 @@ from models import Base, Articles, Comments, Tags, ArticlesTags
 import re
 import os
 from dotenv import load_dotenv
+from custom_types import EntryAlreadyExists
 
 def specify_engine(type="test"):
     if type == "test":
@@ -43,22 +44,34 @@ def make_tags_row(tag):
 def make_articlestags_row(article_id, tag_id):
     return ArticlesTags(article_id=article_id, tag_id=tag_id)
 
+def check_existing_entries(permalink, existing):
+    if permalink in existing:
+        print("entry exists")
+        raise EntryAlreadyExists
+
 def insert_article_data(article_data):
     """Inserts rows in the Articles, Tags and ArticlesTags tables."""
     with Session(engine) as session:
         existing_articles = select_column(Articles, "permalink")
         for item in article_data:
-            if item["permalink"] in existing_articles:
-                print("Item already exists")
-            article_row = make_article_row(item)
-            session.add(article_row)
-            session.commit() # Commit to get row id
-            tag_rows = item["tags"]
-            for item in tag_rows:
-                tag_row = make_tags_row(item)
-                session.add(tag_row)
+            try:
+                check_existing_entries(item["permalink"], existing_articles)
+                article_row = make_article_row(item)
+                session.add(article_row)
                 session.commit() # Commit to get row id
-                session.add(make_articlestags_row(article_row.id, tag_row.id))
+            except EntryAlreadyExists:
+                continue
+            tag_rows = item["tags"]
+            existing_tags = select_column(Tags, "permalink")
+            for item in tag_rows:
+                try:
+                    check_existing_entries(item["permalink"], existing_tags)
+                    tag_row = make_tags_row(item)
+                    session.add(tag_row)
+                    session.commit() # Commit to get row id
+                    session.add(make_articlestags_row(article_row.id, tag_row.id))
+                except EntryAlreadyExists:
+                    continue
         session.commit()
 
 def truncate_keys(data: dict, keys: tuple) -> dict:

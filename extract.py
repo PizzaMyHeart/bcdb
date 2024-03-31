@@ -1,6 +1,6 @@
 from datetime import datetime, UTC
 from typing import List
-from enum import Enum, auto
+from custom_types import RawDataType
 from models import ArticleSource
 import os
 from dotenv import load_dotenv
@@ -19,9 +19,7 @@ from dotenv import load_dotenv
 # select by tag
 # SELECT a.* FROM articles a JOIN articles_tags at ON a.id = at.article_id JOIN tags t ON at.tag_id = t.id WHERE t.name = 'Philosophy books';
 
-class RawDataType(Enum):
-    ARTICLE = auto()
-    COMMENT = auto()
+
 
 class Extractor:
     def __init__(self, test=False):
@@ -35,7 +33,9 @@ class Extractor:
     def get_articles(self, data):
         #data = self.load_data(url)
         articles = data["response"]["results"]
+        #print(articles)
         processed = self.filter_func(articles, self.articles_filter)
+        #print(processed)
         for idx, article in enumerate(articles):
             tags = self.filter_func(article["tags"], self.tags_filter)
             #print(f"\n{idx}: {tags}\n")
@@ -44,12 +44,16 @@ class Extractor:
         return processed
     
     def articles_filter(self, raw: list):
+        comment_close_date = None
+        if "commentCloseDate" in raw["fields"].keys():
+            comment_close_date = datetime.fromisoformat(raw["fields"]["commentCloseDate"])
+        print(comment_close_date)
         return {
             "title": raw["webTitle"],
             "published_date": datetime.fromisoformat(raw["webPublicationDate"]),
             "crawled_date": datetime.now(UTC),
             "updated_date": datetime.now(UTC),
-            "comment_close_date": datetime.fromisoformat(raw["fields"]["commentCloseDate"]),
+            "comment_close_date": comment_close_date,
             "permalink": raw["webUrl"],
             "guardian_short_url": raw["fields"]["shortUrl"],
             "source": ArticleSource.GUARDIAN

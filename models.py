@@ -23,7 +23,7 @@ class Articles(Base):
     title: Mapped[str] = mapped_column(String)
     published_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     crawled_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    comment_close_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    comment_close_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True) # Some earlier results don't have this field
     source: Mapped[ArticleSource]
     is_closed_for_comments: Mapped[bool] = mapped_column(default=False)
     num_comments: Mapped[int] = mapped_column(Integer, nullable=True)

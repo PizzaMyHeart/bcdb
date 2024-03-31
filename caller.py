@@ -6,10 +6,21 @@ from extract import Extractor
 from database import build_db, print_table, get_all_comments, get_tags, select_column, get_guardian_article_key, get_comment_thread
 import json
 import time
+from custom_types import EntryAlreadyExists
+from requests.exceptions import HTTPError
+from http import HTTPStatus
 
 load_dotenv()
 GUARDIAN_API_KEY = os.environ.get("GUARDIAN_API_KEY")
 extractor = Extractor()
+
+retry_codes = [
+    HTTPStatus.TOO_MANY_REQUESTS,
+    HTTPStatus.INTERNAL_SERVER_ERROR,
+    HTTPStatus.BAD_GATEWAY,
+    HTTPStatus.SERVICE_UNAVAILABLE,
+    HTTPStatus.GATEWAY_TIMEOUT,
+]
 
 class ArticleAPICaller():
     def __init__(self, test=False):
@@ -25,23 +36,50 @@ class ArticleAPICaller():
         else:
             self.paginate()
 
-    def article_exists_in_db(self, current):
-        existing = select_column(Articles, "permalink")
-        if current in existing:
-            raise ValueError("err: entry exists")
-        else:
-            return False
 
+    def paginate_articles(self):
+        try:
+            print("Downloading articles...")
+            self.current_page = 169
+            data = self.make_request()
+            articles = extractor.get_articles(data)
+            build_db(articles)
+            self.total_pages = data["response"]["pages"]
+            while self.current_page <= self.total_pages:
+                try:
+                    print(f"Downloading page {self.current_page}")
+                    time.sleep(1)
+                    data = self.make_request()
+                    articles = extractor.get_articles(data)
+                    build_db(articles)
+                    self.current_page += 1
+
+                except EntryAlreadyExists as err:
+                    print(f"Error: {err}")
+                    continue
+                except HTTPError as err:
+                    print(f"HTTP error: {err}")
+                    code = err.response.status_code
+                    print(code)
+                    if code in retry_codes:
+                        time.sleep(1)
+                        continue
+                    raise
+        except EntryAlreadyExists as err:
+            print(err)
+            pass
+        except Exception as err:
+            print(err)
+            pass
+        
     def paginate(self):
         try:
             data = self.make_request()
             articles = extractor.get_articles(data)
-            for article in articles:
-                self.article_exists_in_db(article["permalink"])
             build_db(articles)
             self.current_page = 2
             self.total_pages = data["response"]["pages"]
-            self.total_pages = 1
+            #self.total_pages = 1
             max_requests = 60
             time_frame = 60
             sleep_time = time_frame / max_requests
@@ -66,12 +104,14 @@ class ArticleAPICaller():
                         last_request_time = time.time()
                         request_count = 0
 
-                except Exception as err:
+                except EntryAlreadyExists as err:
                     print(f"Error: {err}")
-                    return None
+                    continue
+
         except Exception as err:
             print(err)
-            return
+            pass
+
 
 
         
@@ -84,7 +124,7 @@ class ArticleAPICaller():
             return r.json()
         except Exception as err:
             print(f"Error: {err}")
-            return None
+            pass
 
 
 
