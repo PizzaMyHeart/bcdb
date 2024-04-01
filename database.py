@@ -76,10 +76,16 @@ def insert_article_data(article_data):
                     # Don't do this; this means each tag will only be inserted once
                     # i.e. one tag belongs to only one article
                     #check_existing_entries(permalink, existing_tags)
-                    tag_row = make_tags_row(item)
-                    session.add(tag_row)
-                    session.commit() # Commit to get row id
-                    session.add(make_articlestags_row(article_row.id, tag_row.id))
+                    if permalink in existing_tags:
+                        # If tag already exists then re-use the same tag id for the junction table
+                        tag_id = session.execute(select(Tags.id).where(Tags.permalink == permalink)).all()[0][0]
+                        #print(tag_id)
+                    else:
+                        tag_row = make_tags_row(item)
+                        session.add(tag_row)
+                        session.commit() # Commit to get row id
+                        tag_id = tag_row.id
+                    session.add(make_articlestags_row(article_row.id, tag_id))
                     session.commit()
                 except EntryAlreadyExists:
                     session.commit()
