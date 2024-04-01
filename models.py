@@ -25,7 +25,7 @@ class Articles(Base):
     crawled_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     comment_close_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True) # Some earlier results don't have this field
     source: Mapped[ArticleSource]
-    is_closed_for_comments: Mapped[bool] = mapped_column(default=False)
+    is_closed_for_comments: Mapped[bool] = mapped_column(default=False) # Use this as a proxy for "up to date"; probs rename this
     num_comments: Mapped[int] = mapped_column(Integer, nullable=True)
     permalink: Mapped[str] = mapped_column(String)
     guardian_short_url: Mapped[str] = mapped_column(String, nullable=True)

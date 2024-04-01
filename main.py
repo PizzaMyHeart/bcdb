@@ -1,4 +1,4 @@
-from database import build_db, print_table, get_all_comments, get_tags, select_column, get_guardian_article_key, get_comment_thread
+from database import get_comment_thread
 from caller import ArticleAPICaller
 #url_comments = "https://discussion.theguardian.com/discussion-api/discussion//p/q3x8f?orderBy=oldest&pageSize=100"
 url_comments = "./tests/raw/guardian_comments_grief.json"
@@ -13,6 +13,10 @@ build_db(articles)
 """
 caller = ArticleAPICaller()
 caller.paginate_articles()
+#caller.paginate_comments()
+
+#guardian_article_keys_and_row_id()
+
 #update_num_comments()
 #short_urls = select_column(Articles, "guardian_short_url")
 #guardian_article_keys = [get_guardian_article_key(item) for item in short_urls]

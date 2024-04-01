@@ -46,8 +46,12 @@ def make_articlestags_row(article_id, tag_id):
 
 def check_existing_entries(permalink, existing):
     if permalink in existing:
-        print("entry exists")
         raise EntryAlreadyExists
+    
+def update_closed_to_comments_to_true(article_id):
+    with Session(engine) as session:
+        session.execute(update(Articles).where(Articles.id == article_id).values(is_closed_for_comments = True))
+        session.commit()
 
 def insert_article_data(article_data):
     """Inserts rows in the Articles, Tags and ArticlesTags tables."""
@@ -60,17 +64,25 @@ def insert_article_data(article_data):
                 session.add(article_row)
                 session.commit() # Commit to get row id
             except EntryAlreadyExists:
+                session.commit()
                 continue
             tag_rows = item["tags"]
+            #print(f"tag_rows: {tag_rows}")
             existing_tags = select_column(Tags, "permalink")
             for item in tag_rows:
                 try:
-                    check_existing_entries(item["permalink"], existing_tags)
+                    permalink = item["permalink"]
+                    #print(f"permalink: {permalink}\n\n")
+                    # Don't do this; this means each tag will only be inserted once
+                    # i.e. one tag belongs to only one article
+                    #check_existing_entries(permalink, existing_tags)
                     tag_row = make_tags_row(item)
                     session.add(tag_row)
                     session.commit() # Commit to get row id
                     session.add(make_articlestags_row(article_row.id, tag_row.id))
+                    session.commit()
                 except EntryAlreadyExists:
+                    session.commit()
                     continue
         session.commit()
 
@@ -91,18 +103,44 @@ def make_comment_row(comment: dict, article_id: int, parent_id = None):
 
 def insert_comment_data(comment_data, article_id):
     with Session(engine) as session:
+        existing_comments = select_column(Comments, "permalink")
         for item in comment_data:
-            comment_row = make_comment_row(item, article_id)
-            session.add(comment_row)
-            session.flush()
-            if len(item["responses"]) > 0:
-                for response in item["responses"]:
-                    session.add(make_comment_row(response, article_id, parent_id=comment_row.id))
+            try:
+                check_existing_entries(item["permalink"], existing_comments)
+                comment_row = make_comment_row(item, article_id)
+                session.add(comment_row)
+                session.flush()
+                if len(item["responses"]) > 0:
+                    for response in item["responses"]:
+                        print(response.keys())
+                        permalink = response["permalink"]
+                        print(f"permalink: {permalink}")
+                        check_existing_entries(response["permalink"], existing_comments)
+                        session.add(make_comment_row(response, article_id, parent_id=comment_row.id))
+            except EntryAlreadyExists as err:
+                print("comment already exists")
+                continue
         session.commit()
         
-def get_guardian_article_key(url):
-    pattern = r"p/.*"
+def guardian_article_key_filter(url: str):
+    pattern = r"/p/.*"
     return re.search(pattern, url).group(0)
+
+def article_metadata() -> list:
+    """Returns a list of tuples of article key, row id, comment_closed_date, is_closed_for_comments"""
+    with Session(engine) as session:
+        result = []
+        rows = session.execute(select(
+            Articles.guardian_short_url, 
+            Articles.id, 
+            Articles.comment_close_date, 
+            Articles.is_closed_for_comments)
+            .where(Articles.is_closed_for_comments == False)
+            )
+        for row in rows:
+            result.append((guardian_article_key_filter(row[0]), row[1], row[2], row[3]))
+        return result
+    
 
 def select_all(table):
     with Session(engine) as session:
@@ -150,7 +188,6 @@ def print_table(table):
     for row in select_all(table):
         print(vars(row))
    
-def build_db(articles):
-    insert_article_data(articles)
+
     #article_id = insert_article_data(articles)
     #insert_comment_data(comments, article_id)
