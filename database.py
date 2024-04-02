@@ -97,15 +97,15 @@ def truncate_keys(data: dict, keys: tuple) -> dict:
     data = {k:v for k, v in data.items() if k in keys}
     return data
 
-def make_comment_row(comment: dict, article_id: int, parent_id = None):
+def make_comment_row(comment: dict, article_id: int, parent_guardian_id = None):
     # Use a subset of the dict without the responses list
     # but keep the list in the original dict to build adjacency list.
     #comment = {k: v for k, v in comment.items() if k not in ("responses",)}
-    comment_table_columns = ("body, date, source, permalink, source_id, author_name")
+    comment_table_columns = ("body, date, source, permalink, guardian_id, author_name")
     comment = truncate_keys(comment, comment_table_columns)
     # Use article id as foreign key
     comment["article_id"] = article_id
-    return Comments(**comment, parent_id = parent_id)
+    return Comments(**comment, parent_guardian_id = parent_guardian_id)
 
 def insert_comment_data(comment_data, article_id):
     with Session(engine) as session:
@@ -118,11 +118,12 @@ def insert_comment_data(comment_data, article_id):
                 session.flush()
                 if len(item["responses"]) > 0:
                     for response in item["responses"]:
-                        print(response.keys())
+                        #print(response.keys())
                         permalink = response["permalink"]
-                        print(f"permalink: {permalink}")
+                        parent_guardian_id = response["parent_guardian_id"]
+                        #print(f"parent_guardian_id: {parent_guardian_id}")
                         check_existing_entries(response["permalink"], existing_comments)
-                        session.add(make_comment_row(response, article_id, parent_id=comment_row.id))
+                        session.add(make_comment_row(response, article_id, parent_guardian_id=response["parent_guardian_id"]))
             except EntryAlreadyExists as err:
                 print("comment already exists")
                 continue

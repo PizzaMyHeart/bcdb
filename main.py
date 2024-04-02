@@ -12,8 +12,8 @@ comments = extractor.get_comments(url_comments)
 build_db(articles)
 """
 caller = ArticleAPICaller()
-caller.paginate_articles()
-#caller.paginate_comments()
+#caller.paginate_articles()
+caller.paginate_comments()
 
 #guardian_article_keys_and_row_id()
 

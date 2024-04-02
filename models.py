@@ -54,13 +54,12 @@ class Comments(Base):
     __tablename__ = "comments"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    guardian_id: Mapped[int] = mapped_column(Integer, unique=True)
     body: Mapped[str] = mapped_column(String)
     permalink: Mapped[str] = mapped_column(String)
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     author_name: Mapped[str] = mapped_column(String)
-    source_id: Mapped[str] = mapped_column(String)
-    parent_guardian_id: Mapped[int] = mapped_column(Integer, nullable=True)
-    parent_id: Mapped[int] = mapped_column(Integer, ForeignKey("comments.id"), nullable=True)
+    parent_guardian_id: Mapped[int] = mapped_column(Integer, ForeignKey("comments.guardian_id"), nullable=True)
     article_id: Mapped[int] = mapped_column(Integer, ForeignKey("articles.id"))
 
 

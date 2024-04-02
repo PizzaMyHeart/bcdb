@@ -45,8 +45,11 @@ class Extractor:
             processed.append(filtered)
             if "responses" in comment.keys():
                 for y, response in enumerate(comment["responses"]):
+                    parent_guardian_id = int(response["responseTo"]["commentId"])
+                    #print(parent_guardian_id)
                     processed[x]["responses"].append(self.comments_filter(response))
-                    processed[x]["responses"][y].update({"parent_guardian_id": response["responseTo"]["commentId"]})
+                    processed[x]["responses"][y].update({"parent_guardian_id": parent_guardian_id})
+        #print(processed)
         return processed
     
     def get_articles(self, data):
@@ -97,7 +100,7 @@ class Extractor:
         return {
             "body": raw["body"],
             "date": datetime.fromisoformat(raw["isoDateTime"]),
-            "source_id": raw["id"], #guardian ID
+            "guardian_id": raw["id"],
             "permalink": raw["webUrl"],
             "author_name": raw["userProfile"]["displayName"],
             "responses": []
