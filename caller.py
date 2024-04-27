@@ -94,9 +94,12 @@ class ArticleAPICaller():
                         if code in retry_codes:
                             time.sleep(1)   
                             continue
+                        if code == HTTPStatus.NOT_FOUND:
+                            continue
                         raise
             except Exception as err:
                 traceback.print_exc(file=sys.stdout)
+                sys.exit(0)
                 pass
                 
     

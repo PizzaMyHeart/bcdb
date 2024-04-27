@@ -1,10 +1,14 @@
 from sqlalchemy import create_engine, select, update, URL
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from models import Base, Articles, Comments, Tags, ArticlesTags
 import re
 import os
+import sys
+import traceback
 from dotenv import load_dotenv
 from custom_types import EntryAlreadyExists
+#from sqlalchemy.dialects.postgresql import insert   # for INSERT ... ON CONFLICT
 
 def specify_engine(type="test"):
     if type == "test":
@@ -121,9 +125,25 @@ def insert_comment_data(comment_data, article_id):
                         #print(response.keys())
                         permalink = response["permalink"]
                         parent_guardian_id = response["parent_guardian_id"]
-                        #print(f"parent_guardian_id: {parent_guardian_id}")
+                        guardian_id = response["guardian_id"]
+                        author = response["author_name"]
+                        body = response["body"]
+                        #print(permalink)
+                        #print(f"guardian_id: {guardian_id} ({author})-- parent_guardian_id: {parent_guardian_id}")
                         check_existing_entries(response["permalink"], existing_comments)
-                        session.add(make_comment_row(response, article_id, parent_guardian_id=response["parent_guardian_id"]))
+                        #row_to_insert = make_comment_row(response, article_id, parent_guardian_id=response["parent_guardian_id"])
+                        #entries = response
+                        #del entries["responses"]
+                        #entries["article_id"] = article_id
+                        #stmt = insert(Comments).values(entries).on_conflict_do_nothing()
+                        #session.execute(stmt)
+                        try:
+                            session.add(make_comment_row(response, article_id, parent_guardian_id=response["parent_guardian_id"]))
+                            session.commit()
+                        except IntegrityError as e:
+                            session.rollback()
+                            print(e)
+                            traceback.print_exc(file=sys.stdout)
             except EntryAlreadyExists as err:
                 print("comment already exists")
                 continue
@@ -184,6 +204,11 @@ def update_num_comments():
             num_comments = len(get_all_comments(article_id))
             session.execute(update(Articles).where(Articles.id == 1).values(num_comments=num_comments))
             session.commit()
+    """
+    This SQL query updates the articles.num_comments with the comment count:
+
+    WITH counts AS (SELECT article_id, COUNT(*) AS row_count FROM comments GROUP BY article_id) UPDATE articles SET num_comments = counts.row_count FROM counts WHERE articles.id = counts.article_id AND articles.is_closed_for_comments=True;
+    """
     
 def print_one_article(article_id):
     with Session(engine) as session:

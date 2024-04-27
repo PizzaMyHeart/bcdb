@@ -1,8 +1,9 @@
 from datetime import datetime
 import enum
+from typing import List
 #from enum import Enum, auto
 from sqlalchemy import Integer, String, DateTime, ForeignKey
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
     pass
