@@ -143,7 +143,7 @@ def insert_comment_data(comment_data, article_id):
                         except IntegrityError as e:
                             session.rollback()
                             print(e)
-                            traceback.print_exc(file=sys.stdout)
+                            #traceback.print_exc(file=sys.stdout)
             except EntryAlreadyExists as err:
                 print("comment already exists")
                 continue

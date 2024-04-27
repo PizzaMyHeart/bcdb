@@ -57,7 +57,7 @@ class ArticleAPICaller():
             comment_closed_date = item[2]
             is_closed_for_comments = item[3]
             self.current_page = 1 # reset
-            if datetime.now(UTC) < comment_closed_date:
+            if comment_closed_date is not None and datetime.now(UTC) < comment_closed_date:
                 print("Comments still open. Skipping...")
                 continue
             if is_closed_for_comments:
@@ -95,11 +95,12 @@ class ArticleAPICaller():
                             time.sleep(1)   
                             continue
                         if code == HTTPStatus.NOT_FOUND:
+                            print(code)
                             continue
                         raise
             except Exception as err:
                 traceback.print_exc(file=sys.stdout)
-                sys.exit(0)
+                #sys.exit(0)
                 pass
                 
     
@@ -130,6 +131,9 @@ class ArticleAPICaller():
                     print(code)
                     if code in retry_codes:
                         time.sleep(1)
+                        continue
+                    if code == HTTPStatus.NOT_FOUND:
+                        print(code)
                         continue
                     raise
         except EntryAlreadyExists as err:
@@ -187,6 +191,9 @@ class ArticleAPICaller():
             r = requests.get(url)
             r.raise_for_status()
             return r.json()
+        except requests.exceptions.HTTPError as http_err:
+            # Handle HTTP errors
+            print(f'HTTP error occurred: {http_err}')
         except Exception as err:
             print(f"Error: {err}")
             pass
