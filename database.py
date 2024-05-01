@@ -179,6 +179,11 @@ def select_column(table, column) -> list:
         rows = session.execute(select(getattr(table, column)))
         return [row[0] for row in rows]
 
+def select_article_by_id(id):
+    with Session(engine) as session:
+        rows = session.execute(select(Articles).where(Articles.id == id))
+        return rows.scalars().all()
+
 def get_comment_thread(comment_id):
     """Recursive CTE query to get a comment and its descendants.
     Returns rows from the comments table and the number of replies."""

@@ -1,7 +1,7 @@
 import meilisearch
 from dotenv import load_dotenv
 import os
-from database import select_all
+from database import select_all, select_article_by_id
 from models import Articles, Comments
 import time
 from bs4 import BeautifulSoup
@@ -36,21 +36,35 @@ def process_article_rows(rows):
 
 def process_comment_rows(rows):
     result = []
-    for row in rows:        
+    for row in rows:
+        article = select_article_by_id(row.article_id)[0]   
         result.append({
             "id": row.id,
             "body": remove_html_tags(row.body),
             "date": unix_ts(row.date),
             "permalink": row.permalink,
             "author_name": row.author_name,
-            "article_id": row.article_id
+            "article_id": row.article_id,
+            "article_title": article.title,
+            "article_date": unix_ts(article.published_date),
+            "article_permalink": article.permalink,
+            "article_num_comments": article.num_comments
         })
     return result
+
+'''
+def update_comments():
+    """Adds article metadata to comments documents for more informative search results."""
+    comments = client.index("comments").get_documents()
+    print(comments.total)
+    for doc in comments:
+        print(doc.article_id)
+'''
 
 
 #articles = process_article_rows(select_all(Articles))
 comments = process_comment_rows(select_all(Comments))
 
-print(len(comments))
+
 #index_articles.add_documents(articles)
-#index_comments.add_documents(comments)
+index_comments.add_documents_in_batches(comments)
