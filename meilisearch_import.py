@@ -1,7 +1,7 @@
 import meilisearch
 from dotenv import load_dotenv
 import os
-from database import select_all, select_article_by_id
+from database import select_all, select_article_by_id, get_all_comments
 from models import Articles, Comments
 import time
 from bs4 import BeautifulSoup
@@ -25,6 +25,9 @@ def remove_html_tags(html):
 def process_article_rows(rows):
     result = []
     for row in rows:
+        if row.num_comments is None:
+            continue
+        #num_comments = len(get_all_comments(row.id))
         result.append({
             "id": row.id,
             "title": row.title, 
@@ -62,9 +65,10 @@ def update_comments():
 '''
 
 
-#articles = process_article_rows(select_all(Articles))
-comments = process_comment_rows(select_all(Comments))
+articles = process_article_rows(select_all(Articles))
+#comments = process_comment_rows(select_all(Comments))
 
 
-#index_articles.add_documents(articles)
-index_comments.add_documents_in_batches(comments)
+index_articles.add_documents(articles)
+#index_comments.add_documents_in_batches(comments)
+
